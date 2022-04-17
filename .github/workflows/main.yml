@@ -14,7 +14,11 @@ jobs:
     name: Build docker image for oereb db
     runs-on: ubuntu-20.04
     env:
-      VERSION: 2.0.${{ github.run_number }}
+      GHCR_IMAGE: ghcr.io/oereb/oereb-db
+      MAJOR: 2
+      MINOR: 0
+      PATCH: ${{ github.run_number }}
+      VERSION: ${{ env.MAJOR}}.${{env.MINOR}}.${{ github.run_number }}
       PG_VERSION: 14-3.2
 
     steps:
@@ -43,16 +47,16 @@ jobs:
         id: meta
         uses: docker/metadata-action@3a3bb3a81753dc99f090d24ee7e5343838b73a96  # v3.5.0 (2021-10-22)
         with:
-          images: oereb/oereb-db
+          #images: oereb/oereb-db
           labels: |
             org.opencontainers.image.title=oereb-db
             org.opencontainers.image.version=${{ env.VERSION }}
             org.opencontainers.image.base.name=docker.io/sogis/postgis:${{ env.PG_VERSION }}
           tags: |
-            type=raw,value=${{ env.VERSION }},enable=true,priority=200
-            type=raw,value=2.0,enable=true,priority=200
-            type=raw,value=2,enable=true,priority=200
-            type=raw,value=latest,enable=true,priority=200
+            type=raw,value=${{ env.GHCR_IMAGE }}:${{ env.VERSION }},enable=true,priority=200
+            type=raw,value=${{ env.GHCR_IMAGE }}:${{ env.MAJOR }}.${{ env.MINOR }},enable=true,priority=200
+            type=raw,value=${{ env.GHCR_IMAGE }}:${{ env.MAJOR }},enable=true,priority=200
+            type=raw,value=${{ env.GHCR_IMAGE }}:latest,enable=true,priority=200
 
       - name: Single-platform build 
         uses: docker/build-push-action@a66e35b9cbcf4ad0ea91ffcaf7bbad63ad9e0229  # v2.7.0 (2021-10-22)
@@ -68,28 +72,29 @@ jobs:
         run: |
           docker images
 
-      - name: Test docker image
-        run: |
-          docker-compose -f docker-compose.test.yml build
-          docker-compose -f docker-compose.test.yml run sut
+      # - name: Test docker image
+      #   run: |
+      #     docker-compose -f docker-compose.test.yml build
+      #     docker-compose -f docker-compose.test.yml run sut
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9  # v1.10.0 (2021-10-22)
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9  # v1.10.0 (2021-10-22)
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+      #   if: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
 
-      # Unschön ist das zweite Builden der Images. Multiarch push manuell ist nicht so prickelnd und
-      # mir ist nicht klar, wie man das Image überhaupt exportieren könnte (also arm auf amd).
-      - name: Multi-platform build and push
-        uses: docker/build-push-action@a66e35b9cbcf4ad0ea91ffcaf7bbad63ad9e0229  # v2.7.0 (2021-10-22)
-        with:
-          platforms: linux/amd64,linux/arm64
-          context: .
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          pull: true
-          push: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
+      # # Unschön ist das zweite Builden der Images. Multiarch push manuell ist nicht so prickelnd und
+      # # mir ist nicht klar, wie man das Image überhaupt exportieren könnte (also arm auf amd).
+      # - name: Multi-platform build and push
+      #   uses: docker/build-push-action@a66e35b9cbcf4ad0ea91ffcaf7bbad63ad9e0229  # v2.7.0 (2021-10-22)
+      #   with:
+      #     platforms: linux/amd64,linux/arm64
+      #     context: .
+      #     file: ./Dockerfile
+      #     tags: ${{ steps.meta.outputs.tags }}
+      #     labels: ${{ steps.meta.outputs.labels }}
+      #     pull: true
+      #     push: ${{ (github.ref == 'refs/heads/main') && (github.event_name != 'pull_request') && !env.ACT }}
 
