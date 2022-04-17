@@ -13,7 +13,7 @@ services:
     depends_on:
       - db
   db:
-    image: ${CONTAINER_IMAGE:-ghcr.io/oereb/oereb-db:latest}
+    image: ${CONTAINER_IMAGE:-oereb/oereb-db:latest}
     environment:
       POSTGRES_DB: oereb
       POSTGRES_PASSWORD: mysecretpassword
