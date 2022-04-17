@@ -1,4 +1,4 @@
-FROM sogis/gretl:latest
+FROM edigonzales/gretl:latest
 
 USER root
 
