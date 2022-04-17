@@ -18,7 +18,7 @@ jobs:
       MAJOR: 2
       MINOR: 0
       PATCH: ${{ github.run_number }}
-      VERSION: ${{ MAJOR }}.${{ MINOR }}.${{ github.run_number }}
+      VERSION: $MAJOR.$MINOR.${{ github.run_number }}
       PG_VERSION: 14-3.2
 
     steps:
